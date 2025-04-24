@@ -1,9 +1,11 @@
 const express = require("express");
-const puppeteer = require("puppeteer");
+const puppeteer = require("puppeteer-core");
 const cors = require("cors");
 
 const app = express();
 app.use(cors());
+
+const CHROMIUM_PATH = "/usr/bin/chromium-browser"; // Render may need this path
 
 app.get("/api/screenshot", async (req, res) => {
     const url = req.query.url;
@@ -15,7 +17,11 @@ app.get("/api/screenshot", async (req, res) => {
     }
 
     try {
-        const browser = await puppeteer.launch({ headless: true });
+        const browser = await puppeteer.launch({
+            executablePath: CHROMIUM_PATH,
+            headless: true,
+            args: ["--no-sandbox", "--disable-setuid-sandbox"]
+        });
         const page = await browser.newPage();
         await page.goto(url, { waitUntil: "networkidle2" });
 
@@ -31,4 +37,4 @@ app.get("/api/screenshot", async (req, res) => {
 });
 
 const PORT = process.env.PORT || 8080;
-app.listen(PORT, () => console.log(`✅ Web Screenshot API running at http://localhost:${PORT}`))
+app.listen(PORT, () => console.log(`✅ Web Screenshot API running at http://localhost:${PORT}`));
